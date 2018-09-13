@@ -3,8 +3,8 @@
 
 #include <FastLED.h>
 
-#define PATTERN_COUNT 5
-#define INVALID_ID 99999
+#define PATTERN_COUNT 6
+#define INVALID_ID 34463
 
 struct LedInfo {
   uint16_t id;
@@ -15,7 +15,7 @@ struct LedInfo {
 
 class PatternBase {
  protected:
-  String _pattern_name;
+  char _pattern_name[64];
   uint16_t _pattern_id;
   uint8_t* _pattern_mask;
   uint8_t* _brightness_array;
@@ -37,27 +37,35 @@ class PatternBase {
  public:
   PatternBase(CRGB* led_array, uint8_t* pattern_mask, uint8_t* brightness_array,
               uint led_count);
-  String get_name() { return _pattern_name; }
+  const char *get_name() const { return _pattern_name; }
   uint16_t get_id() { return _pattern_id; }
-  virtual void complete(){}
+  virtual void complete() {}
   virtual void update() {}
   void loop();
+  uint8_t get_user_speed();
+  uint8_t get_colour_count() { return _colour_count; }
+  CRGB get_colour(uint8_t colour_id) { return _colour_array[colour_id]; }
+  bool set_colour(uint8_t colour_id, CRGB colour);
   bool set_user_speed(uint8_t speed);
 };
 
 class PatternManager {
  private:
-  PatternBase* _pattern_array[PATTERN_COUNT];
   uint8_t* _pattern_mask;
   uint8_t* _brightness_array;
   uint16_t _led_count;
+  uint16_t _pattern_count = PATTERN_COUNT;
 
  public:
+  PatternBase* _pattern_array[PATTERN_COUNT];
   CRGB* _led_array;
   PatternManager(int led_count);
+  void begin();
   void loop();
   LedInfo get_led_info(uint16_t led);
-  uint16_t get_led_count(){ return _led_count;}
+  uint16_t get_led_count() { return _led_count; }
+  uint16_t get_pattern_count() { return _pattern_count; }
+  PatternBase* get_pattern(uint pattern_id);
   bool set_led_colour(uint16_t led, CRGB colour);
   bool set_led_pattern(uint16_t led, uint16_t pattern);
   bool set_led_brightness(uint16_t led, uint8_t brightness);
@@ -91,6 +99,7 @@ class Scanner : public PatternBase {
 class ColourFade : public PatternBase {
  private:
   CRGBPalette256 _gradient;
+
  public:
   ColourFade(CRGB* led_array, uint8_t* pattern_mask, uint8_t* brightness_array,
              uint led_count);
